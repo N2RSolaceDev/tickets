@@ -1,18 +1,13 @@
 {
-  "name": "t",
+  "name": "discord-ticket-bot",
   "version": "1.0.0",
-  "description": "Discord bot with ticket system using .env config",
-  "license": "ISC",
-  "author": "YourName",
-  "type": "commonjs",
+  "description": "Discord ticket bot with .env support",
   "main": "bot.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node bot.js"
   },
   "dependencies": {
-    "@discordjs/core": "^2.1.0",
     "discord.js": "^14.19.3",
-    "dotenv": "^16.8.0"
+    "dotenv": "^16.7.7"
   }
 }
