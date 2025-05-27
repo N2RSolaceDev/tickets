@@ -1,3 +1,6 @@
+// Load environment variables from .env
+require('dotenv').config();
+
 const {
     Client,
     GatewayIntentBits,
@@ -21,9 +24,13 @@ const client = new Client({
     ],
 });
 
-// Load config from JSON
-const config = require('./config.json');
-const { token, supportRoleId, ownerRoleId, ticketSetupChannelId } = config;
+// Load config from environment variables
+const {
+    TOKEN,
+    TICKET_SETUP_CHANNEL_ID,
+    SUPPORT_ROLE_ID,
+    OWNER_ROLE_ID
+} = process.env;
 
 // Store active user tickets
 const userTickets = new Map();
@@ -42,10 +49,12 @@ async function ensureCategories(guild) {
         { name: 'Support Tickets', key: 'support' },
         { name: 'Contact Owner Tickets', key: 'contact_owner' }
     ];
+
     for (const { name, key } of categoriesToCreate) {
         let category = guild.channels.cache.find(
             ch => ch.type === ChannelType.GuildCategory && ch.name.toLowerCase() === name.toLowerCase()
         );
+
         if (!category) {
             try {
                 category = await guild.channels.create({
@@ -58,6 +67,7 @@ async function ensureCategories(guild) {
                 continue;
             }
         }
+
         ticketCategories[key] = category.id;
     }
 }
@@ -71,7 +81,7 @@ client.once('ready', async () => {
     await ensureCategories(guild);
 
     // Setup ticket panel
-    const setupChannel = client.channels.cache.get(ticketSetupChannelId);
+    const setupChannel = client.channels.cache.get(TICKET_SETUP_CHANNEL_ID);
     if (!setupChannel || setupChannel.type !== ChannelType.GuildText) {
         return console.error('Ticket setup channel not found.');
     }
@@ -152,15 +162,14 @@ client.on('interactionCreate', async interaction => {
         }
 
         const categoryId = category.id;
-
         let allowedRoleId;
         switch (selected) {
             case 'join_team':
             case 'support':
-                allowedRoleId = '1373665531722334248'; // Support role
+                allowedRoleId = SUPPORT_ROLE_ID; // Support role
                 break;
             case 'contact_owner':
-                allowedRoleId = '1373655827402985533'; // Owner role
+                allowedRoleId = OWNER_ROLE_ID; // Owner role
                 break;
         }
 
@@ -189,7 +198,7 @@ client.on('interactionCreate', async interaction => {
                         allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
                     },
                     {
-                        id: '1373655827402985533', // Always allow owner role
+                        id: OWNER_ROLE_ID, // Always allow owner role
                         allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
                     },
                 ],
@@ -197,7 +206,8 @@ client.on('interactionCreate', async interaction => {
 
             const embed = new EmbedBuilder()
                 .setTitle(`📬 Ticket opened by ${user.username}`)
-                .setDescription(`Hello ${user}, a staff member will assist you shortly.\n**Type:** ${selected.replace('_', ' ')}`)
+                .setDescription(`Hello ${user}, a staff member will assist you shortly.
+**Type:** ${selected.replace('_', ' ')}`)
                 .setColor('#2ecc71')
                 .setTimestamp();
 
@@ -207,9 +217,7 @@ client.on('interactionCreate', async interaction => {
                 .setStyle(ButtonStyle.Danger);
 
             const row = new ActionRowBuilder().addComponents(closeButton);
-
             await ticketChannel.send({ embeds: [embed], components: [row] });
-
             userTickets.set(user.id, ticketChannel.id);
 
             await interaction.reply({
@@ -266,8 +274,8 @@ client.on('interactionCreate', async interaction => {
 
 // Auto role & welcome message
 client.on('guildMemberAdd', async member => {
-    const roleId = '1373655868427735201'; // Optional: Change this to your role ID
-    const welcomeChannelId = '1373659051115679844'; // Optional: Change to your welcome channel
+    const roleId = process.env.WELCOME_ROLE_ID;
+    const welcomeChannelId = process.env.WELCOME_CHANNEL_ID;
 
     try {
         await member.roles.add(roleId);
@@ -279,7 +287,8 @@ client.on('guildMemberAdd', async member => {
     if (welcomeChannel?.isTextBased()) {
         const embed = new EmbedBuilder()
             .setTitle('🎉 Welcome to the Server!')
-            .setDescription(`Welcome <@${member.id}> to the server!\nWe're glad to have you here.`)
+            .setDescription(`Welcome <@${member.id}> to the server!
+We're glad to have you here.`)
             .setColor('#00FF00')
             .setThumbnail(member.displayAvatarURL({ dynamic: true }));
 
@@ -288,4 +297,4 @@ client.on('guildMemberAdd', async member => {
 });
 
 // Login
-client.login(token);
+client.login(TOKEN);
