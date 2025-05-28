@@ -1,5 +1,7 @@
 // Load environment variables from .env
 require('dotenv').config();
+const express = require('express');
+const app = express();
 
 const {
     Client,
@@ -29,7 +31,10 @@ const {
     TOKEN,
     TICKET_SETUP_CHANNEL_ID,
     SUPPORT_ROLE_ID,
-    OWNER_ROLE_ID
+    OWNER_ROLE_ID,
+    WELCOME_ROLE_ID,
+    WELCOME_CHANNEL_ID,
+    PORT
 } = process.env;
 
 // Store active user tickets
@@ -49,12 +54,10 @@ async function ensureCategories(guild) {
         { name: 'Support Tickets', key: 'support' },
         { name: 'Contact Owner Tickets', key: 'contact_owner' }
     ];
-
     for (const { name, key } of categoriesToCreate) {
         let category = guild.channels.cache.find(
             ch => ch.type === ChannelType.GuildCategory && ch.name.toLowerCase() === name.toLowerCase()
         );
-
         if (!category) {
             try {
                 category = await guild.channels.create({
@@ -67,7 +70,6 @@ async function ensureCategories(guild) {
                 continue;
             }
         }
-
         ticketCategories[key] = category.id;
     }
 }
@@ -218,6 +220,7 @@ client.on('interactionCreate', async interaction => {
 
             const row = new ActionRowBuilder().addComponents(closeButton);
             await ticketChannel.send({ embeds: [embed], components: [row] });
+
             userTickets.set(user.id, ticketChannel.id);
 
             await interaction.reply({
@@ -274,9 +277,8 @@ client.on('interactionCreate', async interaction => {
 
 // Auto role & welcome message
 client.on('guildMemberAdd', async member => {
-    const roleId = process.env.WELCOME_ROLE_ID;
-    const welcomeChannelId = process.env.WELCOME_CHANNEL_ID;
-
+    const roleId = WELCOME_ROLE_ID;
+    const welcomeChannelId = WELCOME_CHANNEL_ID;
     try {
         await member.roles.add(roleId);
     } catch (err) {
@@ -294,6 +296,15 @@ We're glad to have you here.`)
 
         await welcomeChannel.send({ embeds: [embed] });
     }
+});
+
+// Start Express server
+app.get('/', (req, res) => {
+    res.status(200).send('Discord bot is running!');
+});
+
+app.listen(PORT, () => {
+    console.log(`🌐 Web server is running on port ${PORT}`);
 });
 
 // Login
