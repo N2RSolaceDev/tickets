@@ -1,3 +1,4 @@
+
 require('dotenv').config();
 const express = require('express');
 const app = express();
@@ -98,12 +99,15 @@ client.once('ready', async () => {
   );
   if (oldPanel) await oldPanel.delete().catch(console.error);
 
-  // Create embed with description and image
+  // Create embed with text above, then image, then question below
   const embed = new EmbedBuilder()
-    .setTitle('**Team Saki**')
-    .setDescription(`is a multimedia organisation that specialises in content production and competitive esports. It was established in 2025 in hopes of redefining the standards of professional gaming. Team Saki aims to become a leading force in the global gaming scene, showing dedication to developing talent, producing quality content, and building a connected community of fans and talent.\n\n**Would you like to join?**`)
-    .setColor('#0099ff')
-    .setImage('attachment://saki.png'); // Show image before buttons
+    .setTitle('🎫 Open a Ticket')
+    .setDescription(
+      "**Team Saki** is a multimedia organisation that specialises in content production and competitive esports. It was established in 2025 in hopes of redefining the standards of professional gaming. Team Saki aims to become a leading force in the global gaming scene, showing dedication to developing talent, producing quality content, and building a connected community of fans and talent.\n\n" +
+      "**Would you like to join?**"
+    )
+    .setImage('attachment://saki.png') // Show image between text and buttons
+    .setColor('#0099ff');
 
   // Buttons for each ticket type
   const joinTeamButton = new ButtonBuilder()
@@ -148,7 +152,7 @@ client.on('interactionCreate', async interaction => {
     const user = interaction.user;
     const guild = interaction.guild;
 
-    // Optional: Allow only one ticket per user
+    // Prevent duplicate tickets
     if (userTickets.has(user.id)) {
       return interaction.reply({
         content: 'You already have an open ticket!',
