@@ -1,4 +1,6 @@
 
+
+
 require('dotenv').config();
 const express = require('express');
 const app = express();
@@ -103,10 +105,10 @@ client.once('ready', async () => {
   const embed = new EmbedBuilder()
     .setTitle('🎫 Open a Ticket')
     .setDescription(
-      "**Team Saki** is a multimedia organisation that specialises in content production and competitive esports. It was established in 2025 in hopes of redefining the standards of professional gaming. Team Saki aims to become a leading force in the global gaming scene, showing dedication to developing talent, producing quality content, and building a connected community of fans and talent.\n\n" +
-      "**Would you like to join?**"
+      "**Team Saki** is a multimedia organisation that specialises in content production and competitive esports. It was established in 2025 in hopes of redefining the standards of professional gaming. Team Saki aims to become a leading force in the global gaming scene, showing dedication to developing talent, producing quality content, and building a connected community of fans and talent."
     )
     .setImage('attachment://saki.png') // Show image between text and buttons
+    .addFields({ name: '\u200B', value: '**Would you like to join?**' })
     .setColor('#0099ff');
 
   // Buttons for each ticket type
@@ -258,6 +260,7 @@ client.on('interactionCreate', async interaction => {
       });
     }
 
+    // Try to notify user
     const ownerIdMatch = channel.name.match(/-(.+)/);
     if (ownerIdMatch && ownerIdMatch[1]) {
       const ownerId = ownerIdMatch[1];
@@ -266,6 +269,40 @@ client.on('interactionCreate', async interaction => {
         await guildMember.send(`✅ Your ticket (**${channel.name}**) has been closed.`).catch(() => {});
       }
     }
+
+    // Fetch messages
+    let messages;
+    try {
+      messages = await channel.messages.fetch({ limit: 100 });
+    } catch (err) {
+      console.error('Failed to fetch messages for transcript:', err);
+      return interaction.reply({
+        content: '⚠️ Could not generate transcript.',
+        ephemeral: true
+      });
+    }
+
+    // Build transcript
+    const transcript = [...messages]
+      .reverse()
+      .map(([id, msg]) => `[${msg.createdAt.toISOString()}] ${msg.author.tag}: ${msg.content}`)
+      .join('\n');
+
+    const fs = require('fs');
+    const path = `./transcripts/${channel.name}-${Date.now()}.txt`;
+    fs.writeFileSync(path, transcript);
+
+    // Send transcript to log channel
+    const logChannel = client.channels.cache.get('1372479491221356555');
+    if (logChannel?.isTextBased()) {
+      await logChannel.send({
+        content: `📁 Transcript for ${channel.name}`,
+        files: [{ attachment: path, name: `${channel.name}-transcript.txt` }]
+      });
+    }
+
+    // Delete file after sending
+    fs.unlinkSync(path);
 
     // Remove from map
     for (const [userId, channelId] of userTickets.entries()) {
