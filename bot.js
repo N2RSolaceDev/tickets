@@ -35,6 +35,9 @@ const {
   PORT
 } = process.env;
 
+// Custom Emoji ID
+const CUSTOM_EMOJI = '<:emoji_99:1372429509495623680>';
+
 // Store active user tickets
 const userTickets = new Map(); // { userId => channelId }
 
@@ -42,7 +45,8 @@ const userTickets = new Map(); // { userId => channelId }
 const ticketCategories = {
   join_team: null,
   support: null,
-  contact_owner: null
+  contact_owner: null,
+  join_staff: null
 };
 
 // Ensure categories exist or create them
@@ -50,7 +54,8 @@ async function ensureCategories(guild) {
   const categoriesToCreate = [
     { name: 'Join Team Tickets', key: 'join_team' },
     { name: 'Support Tickets', key: 'support' },
-    { name: 'Contact Owner Tickets', key: 'contact_owner' }
+    { name: 'Contact Owner Tickets', key: 'contact_owner' },
+    { name: 'Join Staff Tickets', key: 'join_staff' }
   ];
 
   for (const { name, key } of categoriesToCreate) {
@@ -98,7 +103,7 @@ client.once('ready', async () => {
   );
   if (oldPanel) await oldPanel.delete().catch(console.error);
 
-  // Create embed with spaced text and image below
+  // Create embed with spaced text and sections
   const embed = new EmbedBuilder()
     .setTitle('🎫 Open a Ticket')
     .setDescription(
@@ -108,36 +113,40 @@ client.once('ready', async () => {
       "**Would you like to join?**\n\n" +
       "Select an option below to open a ticket and speak with our team."
     )
-    .setImage('attachment://saki.png') // Banner shown below the description
     .setColor('#0099ff');
 
-  // Buttons for each ticket type
+  // Buttons for each ticket type using custom emoji
   const joinTeamButton = new ButtonBuilder()
     .setCustomId('ticket-join_team')
     .setLabel('Join Team')
-    .setEmoji('👥')
+    .setEmoji(CUSTOM_EMOJI)
     .setStyle(ButtonStyle.Primary);
 
   const supportButton = new ButtonBuilder()
     .setCustomId('ticket-support')
     .setLabel('Support')
-    .setEmoji('🛠')
+    .setEmoji(CUSTOM_EMOJI)
     .setStyle(ButtonStyle.Secondary);
 
   const contactOwnerButton = new ButtonBuilder()
     .setCustomId('ticket-contact_owner')
     .setLabel('Contact Owner')
-    .setEmoji('👑')
+    .setEmoji(CUSTOM_EMOJI)
     .setStyle(ButtonStyle.Danger);
 
+  const joinStaffButton = new ButtonBuilder()
+    .setCustomId('ticket-join_staff')
+    .setLabel('Join Staff')
+    .setEmoji(CUSTOM_EMOJI)
+    .setStyle(ButtonStyle.Success);
+
   const row1 = new ActionRowBuilder().addComponents(joinTeamButton, supportButton);
-  const row2 = new ActionRowBuilder().addComponents(contactOwnerButton);
+  const row2 = new ActionRowBuilder().addComponents(contactOwnerButton, joinStaffButton);
 
   // Send ticket panel
   await setupChannel.send({
     embeds: [embed],
-    components: [row1, row2],
-    files: ['./saki.png'] // Attach local image
+    components: [row1, row2]
   });
 
   console.log('🎟️ Ticket panel with buttons successfully sent!');
@@ -148,7 +157,12 @@ client.on('interactionCreate', async interaction => {
   // Handle ticket buttons
   if (
     interaction.isButton() &&
-    ['ticket-join_team', 'ticket-support', 'ticket-contact_owner'].includes(interaction.customId)
+    [
+      'ticket-join_team',
+      'ticket-support',
+      'ticket-contact_owner',
+      'ticket-join_staff'
+    ].includes(interaction.customId)
   ) {
     const selected = interaction.customId.replace('ticket-', '');
     const user = interaction.user;
@@ -188,6 +202,9 @@ client.on('interactionCreate', async interaction => {
         break;
       case 'contact_owner':
         allowedRoleId = OWNER_ROLE_ID;
+        break;
+      case 'join_staff':
+        allowedRoleId = OWNER_ROLE_ID; // You can assign a different role here if needed
         break;
     }
 
