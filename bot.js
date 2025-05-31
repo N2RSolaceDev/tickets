@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const express = require('express');
 const app = express();
@@ -99,14 +98,17 @@ client.once('ready', async () => {
   );
   if (oldPanel) await oldPanel.delete().catch(console.error);
 
-  // Create embed with text above, then image, then question below
+  // Create embed with spaced text and image below
   const embed = new EmbedBuilder()
     .setTitle('🎫 Open a Ticket')
     .setDescription(
       "**Team Saki** is a multimedia organisation that specialises in content production and competitive esports. It was established in 2025 in hopes of redefining the standards of professional gaming. Team Saki aims to become a leading force in the global gaming scene, showing dedication to developing talent, producing quality content, and building a connected community of fans and talent.\n\n" +
-      "**Would you like to join?**"
+
+      "\n\n" +
+      "**Would you like to join?**\n\n" +
+      "Select an option below to open a ticket and speak with our team."
     )
-    .setImage('attachment://saki.png') // Show image between text and buttons
+    .setImage('attachment://saki.png') // Banner shown below the description
     .setColor('#0099ff');
 
   // Buttons for each ticket type
