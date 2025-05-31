@@ -187,15 +187,21 @@ client.on('interactionCreate', async interaction => {
         .setCustomId('staff_application')
         .setTitle('Apply to Join Staff');
 
+      const ageInput = new TextInputBuilder()
+        .setCustomId('age_confirm')
+        .setLabel("I am 13 years or older. (Yes/No)")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
       const nameInput = new TextInputBuilder()
         .setCustomId('name')
-        .setLabel("What's your name?")
+        .setLabel("What's your full name?")
         .setStyle(TextInputStyle.Short)
         .setRequired(true);
 
       const experienceInput = new TextInputBuilder()
         .setCustomId('experience')
-        .setLabel("Your experience?")
+        .setLabel("Your previous moderation experience?")
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
 
@@ -205,11 +211,42 @@ client.on('interactionCreate', async interaction => {
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
 
-      const firstActionRow = new ActionRowBuilder().addComponents(nameInput);
-      const secondActionRow = new ActionRowBuilder().addComponents(experienceInput);
-      const thirdActionRow = new ActionRowBuilder().addComponents(whyInput);
+      const spamQuestion = new TextInputBuilder()
+        .setCustomId('spam_question')
+        .setLabel("A user is spamming in our server. What’s your first action?")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
 
-      modal.addComponents(firstActionRow, secondActionRow, thirdActionRow);
+      const conflictQuestion = new TextInputBuilder()
+        .setCustomId('conflict_question')
+        .setLabel("How would you handle a conflict between two users?")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
+
+      const longTermQuestion = new TextInputBuilder()
+        .setCustomId('long_term_question')
+        .setLabel("Are you committed to staying with us long-term?")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
+
+      const rulesQuestion = new TextInputBuilder()
+        .setCustomId('rules_question')
+        .setLabel("What does it mean to enforce rules consistently?")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
+
+      const rows = [
+        new ActionRowBuilder().addComponents(ageInput),
+        new ActionRowBuilder().addComponents(nameInput),
+        new ActionRowBuilder().addComponents(experienceInput),
+        new ActionRowBuilder().addComponents(whyInput),
+        new ActionRowBuilder().addComponents(spamQuestion),
+        new ActionRowBuilder().addComponents(conflictQuestion),
+        new ActionRowBuilder().addComponents(longTermQuestion),
+        new ActionRowBuilder().addComponents(rulesQuestion)
+      ];
+
+      modal.addComponents(...rows);
 
       await interaction.showModal(modal);
       return;
@@ -304,9 +341,14 @@ client.on('interactionCreate', async interaction => {
 
   // Handle modal submit
   if (interaction.isModalSubmit() && interaction.customId === 'staff_application') {
+    const ageConfirm = interaction.fields.getTextInputValue('age_confirm');
     const name = interaction.fields.getTextInputValue('name');
     const experience = interaction.fields.getTextInputValue('experience');
     const whyJoin = interaction.fields.getTextInputValue('why_join');
+    const spamQuestion = interaction.fields.getTextInputValue('spam_question');
+    const conflictQuestion = interaction.fields.getTextInputValue('conflict_question');
+    const longTermQuestion = interaction.fields.getTextInputValue('long_term_question');
+    const rulesQuestion = interaction.fields.getTextInputValue('rules_question');
     const user = interaction.user;
     const guild = interaction.guild;
 
@@ -369,9 +411,20 @@ client.on('interactionCreate', async interaction => {
 
       const embed = new EmbedBuilder()
         .setTitle(`🦸‍♂️ Staff Application from ${user.username}`)
-        .setDescription(`**Name:** ${name}\n**Experience:** ${experience}\n**Why Join:** ${whyJoin}`)
+        .setDescription(
+          `**Age Confirmation:** ${ageConfirm}\n` +
+          `**Name:** ${name}\n` +
+          `**Experience:** ${experience}\n` +
+          `**Why Join:** ${whyJoin}\n` +
+          `**Spam Question:** ${spamQuestion}\n` +
+          `**Conflict Handling:** ${conflictQuestion}\n` +
+          `**Long-Term Commitment:** ${longTermQuestion}\n` +
+          `**Rules Enforcement:** ${rulesQuestion}`
+        )
         .setColor('#3498db')
         .setTimestamp();
+
+      const quizMessage = `Thank you for applying! 🎉\n\nPlease complete this quiz to proceed:\n\n🔗 [Staff Quiz - Google Form](https://forms.gle/JEUFGwYcFYaXyPT57)\n\nOnce  completed, wait for a staff review.`;
 
       const closeButton = new ButtonBuilder()
         .setCustomId('close-ticket')
@@ -380,7 +433,10 @@ client.on('interactionCreate', async interaction => {
 
       const row = new ActionRowBuilder().addComponents(closeButton);
 
-      await ticketChannel.send({ embeds: [embed], components: [row] });
+      await ticketChannel.send({ embeds: [embed] });
+      await ticketChannel.send(quizMessage);
+      await ticketChannel.send({ components: [row] });
+
       userTickets.set(user.id, ticketChannel.id);
 
       await interaction.reply({
