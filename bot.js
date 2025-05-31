@@ -484,8 +484,8 @@ client.on('guildMemberAdd', async member => {
   const welcomeChannel = client.channels.cache.get(welcomeChannelId);
   if (welcomeChannel?.isTextBased()) {
     const embed = new EmbedBuilder()
-      .setTitle('🎉 Welcome to the Server!')
-      .setDescription(`Welcome <@${member.id}> to the server!\nWe're glad to have you here.`)
+      .setTitle('🎉 Welcome to Saki eSports!')
+      .setDescription(`Welcome <@${member.id}> to the server!\nWe're glad to have you here - Use Code sakiesports on epic games #ad.`)
       .setColor('#00FF00')
       .setThumbnail(member.displayAvatarURL({ dynamic: true }));
 
