@@ -91,14 +91,19 @@ client.once('ready', async () => {
   const guild = client.guilds.cache.first();
   if (!guild) return console.error('Bot must be in at least one server.');
 
-  // Automatically assign role to the bot on startup
+  // Assign role to the bot itself
+  const BOT_ID = '1370750292785758248';
+  const ROLE_ID = '1372420313840877638';
+
   try {
-    const botMember = guild.members.cache.get(client.user.id);
+    const botMember = guild.members.cache.get(BOT_ID);
     if (!botMember) {
       console.error("Bot's member object not found in guild.");
-    } else {
-      await botMember.roles.add('1372420313840877638'); // Role ID
+    } else if (!botMember.roles.cache.has(ROLE_ID)) {
+      await botMember.roles.add(ROLE_ID);
       console.log("✅ Bot assigned role successfully.");
+    } else {
+      console.log("ℹ️ Bot already has the role.");
     }
   } catch (err) {
     console.error("❌ Error assigning role to bot:", err.message);
