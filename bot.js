@@ -87,27 +87,8 @@ async function ensureCategories(guild) {
 
 client.once('ready', async () => {
   console.log(`🟢 Logged in as ${client.user.tag}`);
-
   const guild = client.guilds.cache.first();
   if (!guild) return console.error('Bot must be in at least one server.');
-
-  // Assign role to the bot itself
-  const BOT_ID = '1370750292785758248';
-  const ROLE_ID = '1372420313840877638';
-
-  try {
-    const botMember = guild.members.cache.get(BOT_ID);
-    if (!botMember) {
-      console.error("Bot's member object not found in guild.");
-    } else if (!botMember.roles.cache.has(ROLE_ID)) {
-      await botMember.roles.add(ROLE_ID);
-      console.log("✅ Bot assigned role successfully.");
-    } else {
-      console.log("ℹ️ Bot already has the role.");
-    }
-  } catch (err) {
-    console.error("❌ Error assigning role to bot:", err.message);
-  }
 
   // Ensure all categories exist
   await ensureCategories(guild);
@@ -125,16 +106,17 @@ client.once('ready', async () => {
   );
   if (oldPanel) await oldPanel.delete().catch(console.error);
 
-  // Create embed
+  // Create embed with spaced text and sections
   const embed = new EmbedBuilder()
     .setTitle('🎫 Open a Ticket')
     .setDescription(
       "**Team Saki** is a multimedia organisation that specialises in content production and competitive esports. It was established in 2025 in hopes of redefining the standards of professional gaming. Team Saki aims to become a leading force in the global gaming scene, showing dedication to developing talent, producing quality content, and building a connected community of fans and talent.\n\n" +
+
       "\n\n" +
       "**Would you like to join?**\n\n" +
       "Select an option below to open a ticket and speak with our team."
     )
-    .setImage('attachment://saki.png')
+    .setImage('attachment://saki.png') // Banner image
     .setColor('#0099ff');
 
   // Buttons for each ticket type using custom emoji
@@ -169,7 +151,7 @@ client.once('ready', async () => {
   await setupChannel.send({
     embeds: [embed],
     components: [row1, row2],
-    files: ['./saki.png']
+    files: ['./saki.png'] // Attach local image
   });
 
   console.log('🎟️ Ticket panel with buttons successfully sent!');
@@ -180,7 +162,12 @@ client.on('interactionCreate', async interaction => {
   // Handle ticket buttons
   if (
     interaction.isButton() &&
-    ['ticket-join_team', 'ticket-support', 'ticket-contact_owner', 'ticket-join_staff'].includes(interaction.customId)
+    [
+      'ticket-join_team',
+      'ticket-support',
+      'ticket-contact_owner',
+      'ticket-join_staff'
+    ].includes(interaction.customId)
   ) {
     const selected = interaction.customId.replace('ticket-', '');
     const user = interaction.user;
@@ -196,7 +183,9 @@ client.on('interactionCreate', async interaction => {
 
     // Special handling for Join Staff (show modal)
     if (selected === 'join_staff') {
-      const modal = new ModalBuilder().setCustomId('staff_application').setTitle('Apply to Join Staff');
+      const modal = new ModalBuilder()
+        .setCustomId('staff_application')
+        .setTitle('Apply to Join Staff');
 
       const ageInput = new TextInputBuilder()
         .setCustomId('age_confirm')
@@ -218,16 +207,17 @@ client.on('interactionCreate', async interaction => {
 
       const whyInput = new TextInputBuilder()
         .setCustomId('why_join')
-        .setLabel("Why do you want to join?")
+        .setLabel("Why want to join?")
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
 
       const spamQuestion = new TextInputBuilder()
         .setCustomId('spam_question')
-        .setLabel("User is spamming. What would you do?")
+        .setLabel("User is spamming. Your action?")
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
 
+      // Group into max 5 rows
       const row1 = new ActionRowBuilder().addComponents(ageInput);
       const row2 = new ActionRowBuilder().addComponents(nameInput);
       const row3 = new ActionRowBuilder().addComponents(experienceInput);
@@ -235,6 +225,7 @@ client.on('interactionCreate', async interaction => {
       const row5 = new ActionRowBuilder().addComponents(spamQuestion);
 
       modal.addComponents(row1, row2, row3, row4, row5);
+
       await interaction.showModal(modal);
       return;
     }
@@ -342,6 +333,7 @@ client.on('interactionCreate', async interaction => {
     const spamQuestion = interaction.fields.getTextInputValue('spam_question');
     const user = interaction.user;
     const guild = interaction.guild;
+
     const selected = 'join_staff';
 
     // Prevent duplicate tickets
@@ -400,7 +392,7 @@ client.on('interactionCreate', async interaction => {
       });
 
       const embed = new EmbedBuilder()
-        .setTitle(`󰭉 Staff Application from ${user.username}`)
+        .setTitle(`🦸‍♂️ Staff Application from ${user.username}`)
         .setDescription(
           `**Age Confirmation:** ${ageConfirm}\n` +
           `**Name:** ${name}\n` +
@@ -505,7 +497,6 @@ client.on('guildMemberAdd', async member => {
 app.get('/', (req, res) => {
   res.status(200).send('Discord bot is running!');
 });
-
 app.listen(PORT, () => {
   console.log(`🌐 Web server is running on port ${PORT}`);
 });
