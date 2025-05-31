@@ -189,49 +189,49 @@ client.on('interactionCreate', async interaction => {
 
       const ageInput = new TextInputBuilder()
         .setCustomId('age_confirm')
-        .setLabel("I am 13 years or older. (Yes/No)")
+        .setLabel("I am 13+ (Yes/No)")
         .setStyle(TextInputStyle.Short)
         .setRequired(true);
 
       const nameInput = new TextInputBuilder()
         .setCustomId('name')
-        .setLabel("What's your full name?")
+        .setLabel("Your full name?")
         .setStyle(TextInputStyle.Short)
         .setRequired(true);
 
       const experienceInput = new TextInputBuilder()
         .setCustomId('experience')
-        .setLabel("Your previous moderation experience?")
+        .setLabel("Moderation experience?")
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
 
       const whyInput = new TextInputBuilder()
         .setCustomId('why_join')
-        .setLabel("Why do you want to join staff?")
+        .setLabel("Why want to join?")
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
 
       const spamQuestion = new TextInputBuilder()
         .setCustomId('spam_question')
-        .setLabel("A user is spamming in our server. What’s your first action?")
+        .setLabel("User is spamming. Your action?")
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
 
       const conflictQuestion = new TextInputBuilder()
         .setCustomId('conflict_question')
-        .setLabel("How would you handle a conflict between two users?")
+        .setLabel("How resolve user conflict?")
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
 
       const longTermQuestion = new TextInputBuilder()
         .setCustomId('long_term_question')
-        .setLabel("Are you committed to staying with us long-term?")
+        .setLabel("Will you stay long-term?")
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
 
       const rulesQuestion = new TextInputBuilder()
         .setCustomId('rules_question')
-        .setLabel("What does it mean to enforce rules consistently?")
+        .setLabel("Enforcing rules consistently?")
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
 
