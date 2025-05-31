@@ -217,36 +217,14 @@ client.on('interactionCreate', async interaction => {
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
 
-      const conflictQuestion = new TextInputBuilder()
-        .setCustomId('conflict_question')
-        .setLabel("How resolve user conflict?")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
+      // Group into max 5 rows
+      const row1 = new ActionRowBuilder().addComponents(ageInput);
+      const row2 = new ActionRowBuilder().addComponents(nameInput);
+      const row3 = new ActionRowBuilder().addComponents(experienceInput);
+      const row4 = new ActionRowBuilder().addComponents(whyInput);
+      const row5 = new ActionRowBuilder().addComponents(spamQuestion);
 
-      const longTermQuestion = new TextInputBuilder()
-        .setCustomId('long_term_question')
-        .setLabel("Will you stay long-term?")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
-
-      const rulesQuestion = new TextInputBuilder()
-        .setCustomId('rules_question')
-        .setLabel("Enforcing rules consistently?")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
-
-      const rows = [
-        new ActionRowBuilder().addComponents(ageInput),
-        new ActionRowBuilder().addComponents(nameInput),
-        new ActionRowBuilder().addComponents(experienceInput),
-        new ActionRowBuilder().addComponents(whyInput),
-        new ActionRowBuilder().addComponents(spamQuestion),
-        new ActionRowBuilder().addComponents(conflictQuestion),
-        new ActionRowBuilder().addComponents(longTermQuestion),
-        new ActionRowBuilder().addComponents(rulesQuestion)
-      ];
-
-      modal.addComponents(...rows);
+      modal.addComponents(row1, row2, row3, row4, row5);
 
       await interaction.showModal(modal);
       return;
@@ -346,9 +324,6 @@ client.on('interactionCreate', async interaction => {
     const experience = interaction.fields.getTextInputValue('experience');
     const whyJoin = interaction.fields.getTextInputValue('why_join');
     const spamQuestion = interaction.fields.getTextInputValue('spam_question');
-    const conflictQuestion = interaction.fields.getTextInputValue('conflict_question');
-    const longTermQuestion = interaction.fields.getTextInputValue('long_term_question');
-    const rulesQuestion = interaction.fields.getTextInputValue('rules_question');
     const user = interaction.user;
     const guild = interaction.guild;
 
@@ -416,10 +391,7 @@ client.on('interactionCreate', async interaction => {
           `**Name:** ${name}\n` +
           `**Experience:** ${experience}\n` +
           `**Why Join:** ${whyJoin}\n` +
-          `**Spam Question:** ${spamQuestion}\n` +
-          `**Conflict Handling:** ${conflictQuestion}\n` +
-          `**Long-Term Commitment:** ${longTermQuestion}\n` +
-          `**Rules Enforcement:** ${rulesQuestion}`
+          `**Spam Question:** ${spamQuestion}`
         )
         .setColor('#3498db')
         .setTimestamp();
