@@ -113,6 +113,7 @@ client.once('ready', async () => {
       "**Would you like to join?**\n\n" +
       "Select an option below to open a ticket and speak with our team."
     )
+    .setImage('attachment://saki.png') // Add banner image
     .setColor('#0099ff');
 
   // Buttons for each ticket type using custom emoji
@@ -143,10 +144,11 @@ client.once('ready', async () => {
   const row1 = new ActionRowBuilder().addComponents(joinTeamButton, supportButton);
   const row2 = new ActionRowBuilder().addComponents(contactOwnerButton, joinStaffButton);
 
-  // Send ticket panel
+  // Send ticket panel with attached image
   await setupChannel.send({
     embeds: [embed],
-    components: [row1, row2]
+    components: [row1, row2],
+    files: ['./saki.png'] // Attach local image
   });
 
   console.log('🎟️ Ticket panel with buttons successfully sent!');
