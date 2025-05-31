@@ -403,7 +403,7 @@ client.on('interactionCreate', async interaction => {
         .setColor('#3498db')
         .setTimestamp();
 
-      const quizMessage = `Thank you for applying! 🎉\n\nPlease complete this quiz to proceed:\n\n🔗 [Staff Quiz - Google Form](https://forms.gle/JEUFGwYcFYaXyPT57)\n\nOnce  completed, wait for a staff review.`;
+      const quizMessage = `Thank you for applying! 🎉\n\nPlease complete this quiz to proceed:\n\n🔗 [Staff Quiz - Google Form](https://forms.gle/uUKTeBaDjUPeBTMY9)\n\nOnce  completed, wait for a staff review.`;
 
       const closeButton = new ButtonBuilder()
         .setCustomId('close-ticket')
