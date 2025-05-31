@@ -247,21 +247,24 @@ client.on('interactionCreate', async interaction => {
     }
 
     const categoryId = category.id;
-    let allowedRoleId;
+    const everyoneRole = guild.roles.everyone;
+    const safeUsername = user.username.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    const ticketName = `${selected}-${safeUsername}`;
 
+    // Determine allowed roles based on ticket type
+    let allowedRoleId;
     switch (selected) {
       case 'join_team':
       case 'support':
+      case 'join_staff':
         allowedRoleId = SUPPORT_ROLE_ID;
         break;
       case 'contact_owner':
         allowedRoleId = OWNER_ROLE_ID;
         break;
+      default:
+        allowedRoleId = SUPPORT_ROLE_ID;
     }
-
-    const everyoneRole = guild.roles.everyone;
-    const safeUsername = user.username.replace(/[^a-z0-9]/gi, '-').toLowerCase();
-    const ticketName = `${selected}-${safeUsername}`;
 
     try {
       const ticketChannel = await guild.channels.create({
@@ -278,13 +281,17 @@ client.on('interactionCreate', async interaction => {
             allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
           },
           {
-            id: allowedRoleId,
-            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
-          },
-          {
             id: OWNER_ROLE_ID,
             allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
-          }
+          },
+          ...(selected !== 'contact_owner' && SUPPORT_ROLE_ID
+            ? [
+                {
+                  id: SUPPORT_ROLE_ID,
+                  allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+                }
+              ]
+            : [])
         ]
       });
 
@@ -354,7 +361,7 @@ client.on('interactionCreate', async interaction => {
     }
 
     const categoryId = category.id;
-    const allowedRoleId = OWNER_ROLE_ID;
+    const allowedRoleId = SUPPORT_ROLE_ID;
     const everyoneRole = guild.roles.everyone;
     const safeUsername = user.username.replace(/[^a-z0-9]/gi, '-').toLowerCase();
     const ticketName = `${selected}-${safeUsername}`;
@@ -374,11 +381,11 @@ client.on('interactionCreate', async interaction => {
             allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
           },
           {
-            id: allowedRoleId,
+            id: OWNER_ROLE_ID,
             allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
           },
           {
-            id: OWNER_ROLE_ID,
+            id: allowedRoleId,
             allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
           }
         ]
