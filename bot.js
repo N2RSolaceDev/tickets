@@ -10,7 +10,10 @@ const {
   ButtonBuilder,
   ButtonStyle,
   ChannelType,
-  PermissionFlagsBits
+  PermissionFlagsBits,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle
 } = require('discord.js');
 
 // Initialize client
@@ -113,7 +116,7 @@ client.once('ready', async () => {
       "**Would you like to join?**\n\n" +
       "Select an option below to open a ticket and speak with our team."
     )
-    .setImage('attachment://saki.png') // Add banner image
+    .setImage('attachment://saki.png') // Banner image
     .setColor('#0099ff');
 
   // Buttons for each ticket type using custom emoji
@@ -178,6 +181,40 @@ client.on('interactionCreate', async interaction => {
       });
     }
 
+    // Special handling for Join Staff (show modal)
+    if (selected === 'join_staff') {
+      const modal = new ModalBuilder()
+        .setCustomId('staff_application')
+        .setTitle('Apply to Join Staff');
+
+      const nameInput = new TextInputBuilder()
+        .setCustomId('name')
+        .setLabel("What's your name?")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const experienceInput = new TextInputBuilder()
+        .setCustomId('experience')
+        .setLabel("Your experience?")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
+
+      const whyInput = new TextInputBuilder()
+        .setCustomId('why_join')
+        .setLabel("Why do you want to join staff?")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
+
+      const firstActionRow = new ActionRowBuilder().addComponents(nameInput);
+      const secondActionRow = new ActionRowBuilder().addComponents(experienceInput);
+      const thirdActionRow = new ActionRowBuilder().addComponents(whyInput);
+
+      modal.addComponents(firstActionRow, secondActionRow, thirdActionRow);
+
+      await interaction.showModal(modal);
+      return;
+    }
+
     // Re-check category existence every time
     let category = guild.channels.cache.get(ticketCategories[selected]);
     if (!category || category.type !== ChannelType.GuildCategory) {
@@ -204,9 +241,6 @@ client.on('interactionCreate', async interaction => {
         break;
       case 'contact_owner':
         allowedRoleId = OWNER_ROLE_ID;
-        break;
-      case 'join_staff':
-        allowedRoleId = OWNER_ROLE_ID; // You can assign a different role here if needed
         break;
     }
 
@@ -263,6 +297,100 @@ client.on('interactionCreate', async interaction => {
       console.error('Error creating ticket channel:', err.message);
       await interaction.reply({
         content: '❌ Failed to create ticket channel. Please try again later.',
+        ephemeral: true
+      });
+    }
+  }
+
+  // Handle modal submit
+  if (interaction.isModalSubmit() && interaction.customId === 'staff_application') {
+    const name = interaction.fields.getTextInputValue('name');
+    const experience = interaction.fields.getTextInputValue('experience');
+    const whyJoin = interaction.fields.getTextInputValue('why_join');
+    const user = interaction.user;
+    const guild = interaction.guild;
+
+    const selected = 'join_staff';
+
+    // Prevent duplicate tickets
+    if (userTickets.has(user.id)) {
+      return interaction.reply({
+        content: 'You already have an open ticket!',
+        ephemeral: true
+      });
+    }
+
+    // Re-check category
+    let category = guild.channels.cache.get(ticketCategories[selected]);
+    if (!category || category.type !== ChannelType.GuildCategory) {
+      try {
+        await ensureCategories(guild);
+        category = guild.channels.cache.get(ticketCategories[selected]);
+        if (!category) throw new Error('Category not found after refresh');
+      } catch (err) {
+        console.error('Failed to re-ensure category:', err);
+        return interaction.reply({
+          content: 'Could not find or recreate the ticket category.',
+          ephemeral: true
+        });
+      }
+    }
+
+    const categoryId = category.id;
+    const allowedRoleId = OWNER_ROLE_ID;
+    const everyoneRole = guild.roles.everyone;
+    const safeUsername = user.username.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    const ticketName = `${selected}-${safeUsername}`;
+
+    try {
+      const ticketChannel = await guild.channels.create({
+        name: ticketName,
+        type: ChannelType.GuildText,
+        parent: categoryId,
+        permissionOverwrites: [
+          {
+            id: everyoneRole.id,
+            deny: [PermissionFlagsBits.ViewChannel]
+          },
+          {
+            id: user.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+          },
+          {
+            id: allowedRoleId,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+          },
+          {
+            id: OWNER_ROLE_ID,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+          }
+        ]
+      });
+
+      const embed = new EmbedBuilder()
+        .setTitle(`🦸‍♂️ Staff Application from ${user.username}`)
+        .setDescription(`**Name:** ${name}\n**Experience:** ${experience}\n**Why Join:** ${whyJoin}`)
+        .setColor('#3498db')
+        .setTimestamp();
+
+      const closeButton = new ButtonBuilder()
+        .setCustomId('close-ticket')
+        .setLabel('Close Ticket')
+        .setStyle(ButtonStyle.Danger);
+
+      const row = new ActionRowBuilder().addComponents(closeButton);
+
+      await ticketChannel.send({ embeds: [embed], components: [row] });
+      userTickets.set(user.id, ticketChannel.id);
+
+      await interaction.reply({
+        content: `✅ Your staff application has been submitted: <#${ticketChannel.id}>`,
+        ephemeral: true
+      });
+    } catch (err) {
+      console.error('Error creating staff ticket:', err.message);
+      await interaction.reply({
+        content: '❌ Failed to submit application. Please try again later.',
         ephemeral: true
       });
     }
